@@ -1,0 +1,15 @@
+# DBCAP V1.0.0 TCP Core Baseline SHA256
+# Re-established 2026-09-16 after real-case V1 bugfixes.
+# capture_quality.py: file_cut_short / file_warning (quality signaling only; no Seq/Ack math change).
+# Case A/B re-verified on 2.pcap after this baseline refresh.
+# Prior 2026-09-15 baseline superseded; historical Git freeze still unavailable.
+
+a4f3e2b2376625115cf26a4443b8d002b1e31b10087d5c4831230f1fd36e1b3a  dbcap/session.py
+035a5cf53d3d52715f952e87b90bc871f0655ee56062df7f17c2f73f4c171caf  dbcap/handshake.py
+56507c98c7d7a0c9bc3956bd015155f0af21dacd947ef40e7c99718ea70f48c3  dbcap/seq_ack.py
+3c5e4ba824c0f4da4c22d94e6a360fe57a328f9f409966e429240f7fc5329056  dbcap/retransmission.py
+06ca3a4fc7534d4435b9a67a464889c80f4d738d850206c87e66ec225f0edd04  dbcap/ack_analysis.py
+b4640a466d4042223753a805f484b10ff5b6ad200015cfee243cc6d2d793c13f  dbcap/rst_analysis.py
+8b158c33412f6fe184082affb4426f4b938b01679f3b010b819a0ef78acc3c0a  dbcap/window_analysis.py
+ea969b0d611c4c41e396deec367e12cf485a085f980e2aeccc52103ea2587e58  dbcap/capture_quality.py
+7d37184692f08c4691d299b035279d38b3b18c5d702e14ba84736004b68396a9  dbcap/payload.py

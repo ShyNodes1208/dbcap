@@ -1,0 +1,65 @@
+DBCAP V1.0.0 — Third-party / license notes (engineering facts)
+==============================================================
+
+This document records engineering packaging facts for release review.
+It does NOT constitute a legal opinion.
+
+STATUS: LEGAL/LICENSING REVIEW REQUIRED
+---------------------------------------
+Especially for Mode A (bundled TShark/Wireshark components under GPL).
+Do not treat this file as LICENSE PASS until an authorized licensing
+reviewer confirms redistribution obligations are met.
+
+
+1) DBCAP application
+   Bundled under: app\dbcap\
+   Version: see VERSION (1.0.0)
+
+
+2) Python Embeddable (CPython)
+   Bundled under: runtime\python\
+   Version: 3.12.9 AMD64
+   License file: runtime\python\LICENSE.txt
+   License family: PSF / CPython license
+
+
+3) Python runtime packages (offline wheels extracted)
+   Location: runtime\python\Lib\site-packages\
+   - rich 15.0.0
+   - markdown-it-py 4.2.0
+   - mdurl 0.1.2
+   - pygments 2.20.0
+   Each package includes dist-info / license metadata under site-packages.
+
+
+4) TShark / Wireshark components
+   Mode A (this build may include tools\tshark\):
+     - tshark.exe + required DLLs + plugins/data dirs for offline -r parsing
+     - COPYING.txt (GPL) when copied from the Wireshark install
+     - Intentionally NOT bundling dumpcap / Npcap live-capture workflow
+     - GPL-2-or-later applies to Wireshark. Redistribution requires
+       corresponding source access / written offer as required by GPL,
+       plus attention to other licenses of bundled DLLs/plugins.
+     - Source upstream references:
+       https://github.com/wireshark/wireshark
+       https://www.wireshark.org/docs/wsdg_html_chunked/ChSrcObtain
+     - This package does NOT currently include a complete corresponding
+       source bundle for Wireshark 4.x or a signed source offer letter.
+       => LEGAL/LICENSING REVIEW REQUIRED before external Mode A distribution.
+
+   Mode B (-SkipTShark):
+     - tools\tshark\ has README only (no binaries)
+     - Uses site-installed Wireshark/TShark discovered at runtime
+     - Avoids redistributing Wireshark binaries in this zip
+     - Does not automatically clear all third-party license obligations
+       for remaining components (Python/runtime wheels still apply)
+
+
+5) Recommended field policy
+   - Convenience: Mode A after LEGAL/LICENSING REVIEW REQUIRED is cleared
+   - Compliance-sensitive: Mode B (system Wireshark) until legal review completes
+
+
+6) What DBCAP needs from TShark
+   Offline reading of existing .pcap / .pcapng only.
+   Live capture (Npc) is out of scope for V1.

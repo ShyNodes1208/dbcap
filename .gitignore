@@ -1,0 +1,61 @@
+# ============================================================
+# DBCAP V1.0.0 — 公开仓库排除规则
+#
+# 原则：真实现场数据、构建产物、缓存、内部过程文档一律不入库。
+# 本文件本身就是发布安全边界，修改前请先确认不会放回敏感内容。
+# ============================================================
+
+# --- 1. 真实现场数据：绝不入库 ---
+# 现场 PCAP、JDBC 日志、ping 日志、分析结果、payload 证据
+output/
+input/
+review_work/
+*.pcap
+*.pcapng
+*.cap
+jdbclog*.txt
+jdbclog*.log
+ping_*.log
+
+# --- 2. 构建产物 / 二进制 ---
+# Mode A（含 TShark）与 Mode B（不含 TShark）包均不入库，
+# 只作为 GitHub Release 附件发布。
+dist/
+*.zip
+*.whl
+*.exe
+vendor/
+_audit_extract/
+# 离线运行时引导脚本（属离线打包资产，不随源码仓库分发）
+get-pip.py
+
+# --- 3. 缓存 ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.venv/
+venv/
+
+# --- 4. 内部过程文档（含现场信息或内部评审内容）---
+CODEX_*.md
+REAL_CASE_*.md
+DBCAP_OLD_PROJECT_AUDIT.md
+DBCAP_DEVELOPMENT_RESULT.md
+DBCAP_V1_RELEASE.md
+DBCAP_V1_RELEASE_FIX_PLAN*.md
+DBCAP_V1_RELEASE_FIX_RESULT*.md
+DBCAP_V1_FINAL_FIX_RESULT.md
+FREEZE_v1.0.0.txt
+V2_BACKLOG.md
+
+# --- 5. 本地环境 / 凭据 ---
+.ai/
+.env
+.env.*
+*.local
+*.pem
+*.key

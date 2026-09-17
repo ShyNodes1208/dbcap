@@ -1,0 +1,22 @@
+{
+  "retx_single_severity": "INFO",
+  "retx_burst_warn_count": 2,
+  "retx_high_count": 3,
+  "retx_high_duration_ms": 1000.0,
+  "handshake_warn_ms": 100.0,
+  "handshake_crit_ms": 500.0,
+  "rtt_warn_ms": 50.0,
+  "rtt_crit_ms": 100.0,
+  "retx_rate_warn_pct": 2.0,
+  "retx_rate_crit_pct": 5.0,
+  "zero_window_warn_count": 1,
+  "zero_window_crit_count": 5,
+  "ack_stall_ms": 1000.0,
+  "rst_after_syn_severity": "WARNING",
+  "rst_during_data_severity": "HIGH",
+  "ack_to_rst_severity": "WARNING",
+  "rst_after_fin_severity": "INFO",
+  "truncated_warn_ratio": 0.05,
+  "truncated_high_ratio": 0.30,
+  "rst_short_flow_packet_threshold": 50
+}
