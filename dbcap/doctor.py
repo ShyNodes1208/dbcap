@@ -168,7 +168,15 @@ def run_doctor(output_dir: str | None = None) -> int:
             bundled_ts = "tools" in Path(tshark).as_posix().lower()
             mode = "bundled" if bundled_ts else "system/PATH"
             console.print(f"TShark Mode: {mode}")
-            console.print("[green]TShark: PASS[/green]")
+            console.print(f"[green]TShark: PASS[/green]")
+        capinfos = Path(tshark).with_name("capinfos.exe")
+        if not capinfos.is_file():
+            capinfos = Path(tshark).with_name("capinfos")
+        if capinfos.is_file():
+            console.print(f"capinfos: {capinfos}")
+            console.print("[green]capinfos: PASS[/green]")
+        else:
+            console.print("[yellow]capinfos: NOT BUNDLED (tshark is sufficient for analysis)[/yellow]")
     except Exception as e:
         failures.append("TShark")
         console.print(f"[red]TShark: FAIL — {e}[/red]")
@@ -197,6 +205,12 @@ def run_doctor(output_dir: str | None = None) -> int:
         probe.write_text("ok", encoding="utf-8")
         probe.unlink(missing_ok=True)
         console.print(f"[green]output dir writable: PASS[/green] ({out_dir.resolve()})")
+        import tempfile
+
+        fd, name = tempfile.mkstemp(prefix="dbcap_")
+        os.close(fd)
+        os.remove(name)
+        console.print("[green]temporary directory: PASS[/green]")
     except Exception as e:
         failures.append("output writable")
         console.print(f"[red]output dir writable: FAIL — {e}[/red]")

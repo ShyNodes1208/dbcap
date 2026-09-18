@@ -20,8 +20,18 @@ def _fresh_dir(name: str) -> Path:
     return path
 
 
-def test_version_is_v1():
-    assert __version__ == "1.0.0"
+def test_version_string():
+    # V1: 1.0.0; V2.x-dev milestones on v2-dev
+    assert __version__ in (
+        "1.0.0",
+        "2.0.0-dev",
+        "2.2.0-dev",
+        "2.4.0-dev",
+        "2.5.0-dev",
+        "2.6.0-dev",
+        "2.7.0-dev",
+        "2.10.0-rc1",
+    )
 
 
 def test_find_tshark_prefers_bundle(monkeypatch):

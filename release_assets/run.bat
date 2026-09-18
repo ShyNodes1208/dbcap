@@ -21,6 +21,14 @@ set "PYTHONNOUSERSITE=1"
 set "PYTHONPATH="
 
 if /I "%~1"=="doctor" goto do_doctor
+if /I "%~1"=="help" goto usage
+if /I "%~1"=="--help" goto usage
+if /I "%~1"=="-h" goto usage
+if /I "%~1"=="case" goto do_module
+if /I "%~1"=="auto-case" goto do_module
+if /I "%~1"=="batch" goto do_module
+if /I "%~1"=="dual" goto do_module
+if /I "%~1"=="jdbc" goto do_module
 if "%~1"=="" goto usage
 if "%~2"=="" goto usage
 if not exist "%PY%" goto no_python
@@ -41,6 +49,12 @@ echo.
 set "RC=%ERRORLEVEL%"
 exit /b %RC%
 
+:do_module
+if not exist "%PY%" goto no_python
+"%PY%" -I -m dbcap %*
+set "RC=%ERRORLEVEL%"
+exit /b %RC%
+
 :do_doctor
 call "%HOME%\doctor.bat"
 set "RC=%ERRORLEVEL%"
@@ -54,10 +68,11 @@ exit /b 1
 
 :usage
 echo Usage:
-echo   run.bat ^<pcap_file^> ^<db_port^> [output_dir]
 echo   run.bat doctor
+echo   run.bat case ...
+echo   run.bat auto-case ^<case_folder^> --port ^<db_port^>
+echo   run.bat batch ^<cases_root^> --port ^<db_port^>
+echo   run.bat ^<pcap_file^> ^<db_port^> [output_dir]
 echo.
-echo Examples:
-echo   run.bat H:\case\2.pcap 5236
-echo   run.bat input\case01.pcap 5236
+echo Open report.html in the output folder with a browser. No network required.
 exit /b 1
