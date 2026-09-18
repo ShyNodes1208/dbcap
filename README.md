@@ -134,3 +134,47 @@ DBCAP_DEVELOPMENT_RESULT.md
 | 1 | WARNING |
 | 2 | HIGH |
 | 3 | 运行错误 |
+
+## 许可证
+
+DBCAP 采用 **Apache License 2.0**。
+
+```text
+Copyright (C) 2026 ShyNodes1208
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
+
+全文见 `LICENSE`，第三方组件归属见 `NOTICE` 与 `LICENSES.txt`。
+
+除非单个文件头部另有声明，`dbcap/` 下全部源文件均按上述 Apache-2.0 授权。
+
+### 关于 Wireshark / TShark
+
+DBCAP **不再随包分发** Wireshark/TShark。程序通过子进程调用使用者自行提供的
+`tshark.exe`，不链接、不嵌入、不再分发 Wireshark 代码，因此不承担 Wireshark
+GPL 的源码与通告义务。
+
+TShark 的获取方式见下方「离线部署（Windows）」。
+
+### 第三方组件
+
+| 组件 | 许可证 | 许可证文本位置 |
+|------|--------|----------------|
+| CPython 3.12.9 | PSF-2.0 | `runtime/python/LICENSE.txt` |
+| OpenSSL | Apache-2.0 | `licenses/Apache-2.0.txt` |
+| libffi | MIT | `licenses/libffi-MIT.txt` |
+| rich / markdown-it-py / mdurl | MIT | 各自 `.dist-info/licenses/` |
+| Pygments | BSD-2-Clause | `pygments-2.20.0.dist-info/licenses/LICENSE` |
+| SQLite | Public Domain | 无需通告 |
+| Microsoft VC++ Runtime | Microsoft 可再分发 | 未修改的微软原始二进制 |

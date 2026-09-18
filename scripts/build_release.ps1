@@ -122,6 +122,9 @@ $TsharkMode = "B"
 if (-not $SkipTShark -and (Test-Path (Join-Path $WiresharkDir "tshark.exe"))) {
     $TsharkMode = "A"
     Copy-Item (Join-Path $WiresharkDir "tshark.exe") $TsharkDst -Force
+    if (Test-Path (Join-Path $WiresharkDir "capinfos.exe")) {
+        Copy-Item (Join-Path $WiresharkDir "capinfos.exe") $TsharkDst -Force
+    }
     if (Test-Path (Join-Path $WiresharkDir "COPYING.txt")) {
         Copy-Item (Join-Path $WiresharkDir "COPYING.txt") (Join-Path $TsharkDst "COPYING.txt") -Force
     }
@@ -145,7 +148,19 @@ See LICENSES.txt and COPYING.txt (GPL). LEGAL/LICENSING REVIEW REQUIRED.
 } else {
     @"
 TShark NOT bundled (Mode B).
-Install Wireshark with TShark, or copy a legal runtime to tools\tshark\.
+No Wireshark binary is distributed in this package.
+
+DBCAP looks for tshark.exe in this order:
+  1. <DBCAP_HOME>\tools\tshark\tshark.exe   (drop a copy here to make it self-contained)
+  2. the DBCAP_TSHARK environment variable
+  3. PATH
+  4. C:\Program Files\Wireshark\tshark.exe and similar standard install paths
+
+Obtain TShark from the Wireshark project: https://www.wireshark.org/download.html
+The installer offers a TShark-only component; the GUI and Npcap are not required.
+Wireshark is licensed GPL-2.0-or-later; its license and notices are in that install.
+
+See ..\..\README.txt section 4 and ..\..\LICENSES.txt.
 "@ | Set-Content (Join-Path $TsharkDst "README.txt") -Encoding ASCII
 }
 
@@ -155,7 +170,28 @@ Copy-Ascii (Join-Path $Root "release_assets\run.bat") (Join-Path $PkgDir "run.ba
 Copy-Ascii (Join-Path $Root "release_assets\doctor.bat") (Join-Path $PkgDir "doctor.bat")
 Copy-Item (Join-Path $Root "release_assets\README.txt") (Join-Path $PkgDir "README.txt") -Force
 Copy-Item (Join-Path $Root "release_assets\LICENSES.txt") (Join-Path $PkgDir "LICENSES.txt") -Force
+# License texts referenced by LICENSES.txt:
+#   Apache-2.0.txt  -> DBCAP itself AND OpenSSL (Apache-2.0 requires recipients get a copy)
+#   libffi-MIT.txt  -> libffi (MIT requires the notice be retained)
+$LicSrc = Join-Path $Root "release_assets\licenses"
+if (-not (Test-Path $LicSrc)) { throw "Missing $LicSrc" }
+$LicDst = Join-Path $PkgDir "licenses"
+Ensure-Dir $LicDst
+Copy-Item (Join-Path $LicSrc "*.txt") $LicDst -Force
+if (-not (Test-Path (Join-Path $Root "NOTICE"))) { throw "Missing NOTICE at repo root" }
+Copy-Item (Join-Path $Root "NOTICE") (Join-Path $PkgDir "NOTICE") -Force
 Copy-Item (Join-Path $Root "release_assets\samples_README.txt") (Join-Path $PkgDir "samples\README.txt") -Force
+Ensure-Dir (Join-Path $PkgDir "examples\case-template")
+if (Test-Path (Join-Path $Root "examples\case-template\README.txt")) {
+    Copy-Item (Join-Path $Root "examples\case-template\README.txt") (Join-Path $PkgDir "examples\case-template\README.txt") -Force
+}
+@"
+DBCAP
+$Version
+
+Platform:
+Windows x64
+"@ | Set-Content (Join-Path $PkgDir "VERSION.txt") -Encoding ASCII
 foreach ($doc in @("USER_GUIDE.md","OFFLINE_DEPLOYMENT.md","TROUBLESHOOTING.md")) {
     Copy-Item (Join-Path $Root "docs\$doc") (Join-Path $PkgDir "docs\$doc") -Force
 }
@@ -248,4 +284,8 @@ Write-Host "Package : $PkgDir"
 Write-Host "Zip     : $ZipPath"
 Write-Host "SHA256  : $zh"
 Write-Host "TShark  : Mode $TsharkMode"
-Write-Host "NOTE    : LEGAL/LICENSING REVIEW REQUIRED for Mode A GPL redistribution."
+if ($TsharkMode -eq "A") {
+    Write-Host "NOTE    : LEGAL/LICENSING REVIEW REQUIRED for Mode A GPL redistribution." -ForegroundColor Yellow
+} else {
+    Write-Host "NOTE    : Mode B - no Wireshark binaries redistributed, no GPL source obligation." -ForegroundColor Green
+}

@@ -1,0 +1,28 @@
+DBCAP
+Copyright (C) 2026 ShyNodes1208
+
+This product is licensed under the Apache License, Version 2.0.
+See the LICENSE file for the full license text.
+
+-------------------------------------------------------------------------------
+Third-party components
+
+This product includes software developed by third parties. The full list,
+with license identifiers and the location of each license text within the
+distributed package, is in LICENSES.txt.
+
+Summary:
+
+  CPython 3.12.9            PSF-2.0        runtime/python/LICENSE.txt
+  OpenSSL                   Apache-2.0     licenses/Apache-2.0.txt
+  libffi                    MIT            licenses/libffi-MIT.txt
+  rich                      MIT            runtime/python/Lib/site-packages/rich-15.0.0.dist-info/licenses/LICENSE
+  markdown-it-py            MIT            runtime/python/Lib/site-packages/markdown_it_py-4.2.0.dist-info/licenses/LICENSE
+  mdurl                     MIT            runtime/python/Lib/site-packages/mdurl-0.1.2.dist-info/LICENSE
+  Pygments                  BSD-2-Clause   runtime/python/Lib/site-packages/pygments-2.20.0.dist-info/licenses/LICENSE
+  SQLite                    Public Domain  (no notice required)
+  Microsoft VC++ Runtime    Microsoft      (redistributable, unmodified Microsoft binary)
+
+This product does NOT include Wireshark or TShark.
+DBCAP invokes a TShark executable supplied by the user; it does not link to,
+embed, or redistribute Wireshark code.

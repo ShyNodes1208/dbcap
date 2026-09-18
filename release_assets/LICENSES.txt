@@ -1,65 +1,113 @@
-DBCAP V1.0.0 — Third-party / license notes (engineering facts)
-==============================================================
+DBCAP — Licenses and third-party notices
+==========================================
 
-This document records engineering packaging facts for release review.
-It does NOT constitute a legal opinion.
+Version: see the VERSION file in this package.
 
-STATUS: LEGAL/LICENSING REVIEW REQUIRED
----------------------------------------
-Especially for Mode A (bundled TShark/Wireshark components under GPL).
-Do not treat this file as LICENSE PASS until an authorized licensing
-reviewer confirms redistribution obligations are met.
+This file lists every component distributed in this package, its license, and
+where the license text can be found. It is an engineering notice file, not a
+legal opinion.
 
 
 1) DBCAP application
-   Bundled under: app\dbcap\
-   Version: see VERSION (1.0.0)
+   Bundled under:      app\dbcap\
+   Copyright:          Copyright (C) 2026 ShyNodes1208
+   License:            Apache License 2.0
+   License text:       licenses\Apache-2.0.txt
+   Attribution:        NOTICE
+
+   Unless a file states otherwise, all source files under app\dbcap\ are
+   licensed under the Apache License, Version 2.0.
 
 
 2) Python Embeddable (CPython)
-   Bundled under: runtime\python\
-   Version: 3.12.9 AMD64
-   License file: runtime\python\LICENSE.txt
-   License family: PSF / CPython license
+   Bundled under:      runtime\python\
+   Version:            3.12.9 AMD64
+   License:            PSF-2.0 (Python Software Foundation License Version 2)
+   License text:       runtime\python\LICENSE.txt
+
+   Redistribution is permitted. The PSF license text and copyright notice
+   accompany the binary, as required.
 
 
-3) Python runtime packages (offline wheels extracted)
-   Location: runtime\python\Lib\site-packages\
-   - rich 15.0.0
-   - markdown-it-py 4.2.0
-   - mdurl 0.1.2
-   - pygments 2.20.0
-   Each package includes dist-info / license metadata under site-packages.
+3) Python runtime packages (offline wheels, extracted)
+   Location:           runtime\python\Lib\site-packages\
+   Each package ships its own license metadata under its .dist-info directory.
+
+   - rich 15.0.0            MIT           rich-15.0.0.dist-info\licenses\LICENSE
+   - markdown-it-py 4.2.0   MIT           markdown_it_py-4.2.0.dist-info\licenses\LICENSE
+                                          (+ LICENSE.markdown-it for upstream markdown-it)
+   - mdurl 0.1.2            MIT           mdurl-0.1.2.dist-info\LICENSE
+   - pygments 2.20.0        BSD-2-Clause  pygments-2.20.0.dist-info\licenses\LICENSE
+                                          (+ AUTHORS)
 
 
-4) TShark / Wireshark components
-   Mode A (this build may include tools\tshark\):
-     - tshark.exe + required DLLs + plugins/data dirs for offline -r parsing
-     - COPYING.txt (GPL) when copied from the Wireshark install
-     - Intentionally NOT bundling dumpcap / Npcap live-capture workflow
-     - GPL-2-or-later applies to Wireshark. Redistribution requires
-       corresponding source access / written offer as required by GPL,
-       plus attention to other licenses of bundled DLLs/plugins.
-     - Source upstream references:
-       https://github.com/wireshark/wireshark
-       https://www.wireshark.org/docs/wsdg_html_chunked/ChSrcObtain
-     - This package does NOT currently include a complete corresponding
-       source bundle for Wireshark 4.x or a signed source offer letter.
-       => LEGAL/LICENSING REVIEW REQUIRED before external Mode A distribution.
+4) Native libraries inside the Python runtime
+   Location:           runtime\python\
 
-   Mode B (-SkipTShark):
-     - tools\tshark\ has README only (no binaries)
-     - Uses site-installed Wireshark/TShark discovered at runtime
-     - Avoids redistributing Wireshark binaries in this zip
-     - Does not automatically clear all third-party license obligations
-       for remaining components (Python/runtime wheels still apply)
+   - libcrypto-3.dll        OpenSSL       Apache-2.0
+     libssl-3.dll           OpenSSL       Apache-2.0
+       License text:        licenses\Apache-2.0.txt
+       Note: Apache-2.0 sections 4(a) and 4(d) require that recipients receive
+             a copy of the License. DBCAP does not import the ssl module; these
+             DLLs are part of the stock CPython embeddable distribution.
+
+   - libffi-8.dll           libffi        MIT
+       License text:        licenses\libffi-MIT.txt
+       Copyright:           Copyright (c) 1996-2026 Anthony Green, Red Hat, Inc and others.
+
+   - sqlite3.dll            SQLite        Public Domain
+       No notice required. DBCAP does not import the sqlite3 module.
+
+   - vcruntime140.dll       Microsoft VC++ Runtime
+     vcruntime140_1.dll     Microsoft VC++ Runtime
+       Redistributable, unmodified Microsoft-shipped binaries.
+       DBCAP does not modify these files.
 
 
-5) Recommended field policy
-   - Convenience: Mode A after LEGAL/LICENSING REVIEW REQUIRED is cleared
-   - Compliance-sensitive: Mode B (system Wireshark) until legal review completes
+5) TShark / Wireshark
+   NOT INCLUDED IN THIS PACKAGE.
+
+   This is a "Mode B" build. tools\tshark\ contains a README only — no
+   tshark.exe, no Wireshark DLLs, no plugins.
+
+   DBCAP invokes a TShark executable supplied by the user:
+
+     - <DBCAP_HOME>\tools\tshark\tshark.exe   (if the user places one there)
+     - the DBCAP_TSHARK environment variable
+     - PATH
+     - the standard Wireshark install directories
+
+   DBCAP calls TShark as a separate process and reads its text output. It does
+   not link to, embed, or redistribute Wireshark code. Because no Wireshark
+   binary is distributed in this package, the GPL corresponding-source and
+   notice obligations for Wireshark do not attach to this package.
+
+   Wireshark is licensed GPL-2.0-or-later. Users who install it obtain it
+   directly from the Wireshark project:
+     https://www.wireshark.org/download.html
+   Wireshark's own license, copyright holders, and warranty disclaimer are in
+   the README.txt and COPYING.txt of that installation.
+
+   This package does not bundle dumpcap, the Wireshark GUI, or Npcap. Live
+   capture is out of scope for DBCAP.
 
 
 6) What DBCAP needs from TShark
-   Offline reading of existing .pcap / .pcapng only.
-   Live capture (Npc) is out of scope for V1.
+   Offline reading of existing .pcap / .pcapng files only.
+   Live capture is out of scope.
+
+
+7) Summary table
+
+   Component                     License          Where
+   ----------------------------  ---------------  ---------------------------------
+   DBCAP application             Apache-2.0       licenses\Apache-2.0.txt
+   CPython 3.12.9                PSF-2.0          runtime\python\LICENSE.txt
+   OpenSSL                       Apache-2.0       licenses\Apache-2.0.txt
+   libffi                        MIT              licenses\libffi-MIT.txt
+   rich                          MIT              rich-15.0.0.dist-info\
+   markdown-it-py                MIT              markdown_it_py-4.2.0.dist-info\
+   mdurl                         MIT              mdurl-0.1.2.dist-info\
+   Pygments                      BSD-2-Clause     pygments-2.20.0.dist-info\
+   SQLite                        Public Domain    (no notice required)
+   Microsoft VC++ Runtime        Microsoft        (unmodified MS binary)
