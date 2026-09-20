@@ -106,14 +106,14 @@ def export_case_html(result: CaseAnalysisResult, path: str) -> str:
     tl_note = ""
     if len(result.unified_timeline) > 200:
         tl_note = (
-            f"<p class='muted'>Showing 200 of {len(result.unified_timeline)} rows; "
-            "see unified_timeline.csv for full export.</p>"
+            f"<p class='muted'>当前仅显示前 200 条记录（共 {len(result.unified_timeline)} 条），"
+            "完整结果请查看 unified_timeline.csv。</p>"
         )
 
     # --- Evidence lists ---
     def _elist(items):
         if not items:
-            return "<li>(none)</li>"
+            return "<li>（无）</li>"
         return "".join(f"<li>{_esc(redact_secrets(x.text))}</li>" for x in items)
 
     # --- Wireshark ---
@@ -122,8 +122,8 @@ def export_case_html(result: CaseAnalysisResult, path: str) -> str:
         for c in corr.candidates[:5]:
             ws_bits.append(
                 f"<li><strong>{_esc(c.dual_correlation_id)}</strong>: "
-                f"<code>tcp.stream eq { _esc(c.app_stream) }</code> (APP) / "
-                f"<code>tcp.stream eq { _esc(c.db_stream) }</code> (DB)</li>"
+                f"<code>tcp.stream eq { _esc(c.app_stream) }</code>（应用侧） / "
+                f"<code>tcp.stream eq { _esc(c.db_stream) }</code>（数据库侧）</li>"
             )
     for r in result.unified_timeline:
         if r.frame is not None and r.event_type in (
@@ -144,8 +144,9 @@ def export_case_html(result: CaseAnalysisResult, path: str) -> str:
     if corr and corr.correlation_status == "AMBIGUOUS":
         ambiguous_banner = (
             '<div class="callout callout-warn">'
-            "<strong>AMBIGUOUS:</strong> 当前证据不足以唯一确定该 JDBC 错误对应的 TCP 连接。"
-            " Top candidate 仅为身份排名建议，不是 Confirmed connection。"
+            "<strong>关联状态：AMBIGUOUS（证据不足，无法唯一确认）</strong>。"
+            "当前证据不足以唯一确定该 JDBC 错误对应的 TCP 连接。"
+            "首选候选连接仅为身份排名建议，不是已确认连接（CONFIRMED）。"
             "</div>"
         )
 
@@ -165,15 +166,15 @@ def export_case_html(result: CaseAnalysisResult, path: str) -> str:
         )
         if corr.dual_correlation_id:
             exec_bits.append(
-                f"目前身份得分最高候选为 <code>{_esc(corr.dual_correlation_id)}</code> "
-                f"（App stream {_esc(corr.app_stream)} / DB stream {_esc(corr.db_stream)}）。"
+                f"目前身份得分（Identity Score）最高候选为 <code>{_esc(corr.dual_correlation_id)}</code> "
+                f"（应用侧 Stream {_esc(corr.app_stream)} / 数据库侧 Stream {_esc(corr.db_stream)}）。"
             )
             if corr.candidates and len(corr.candidates) > 1:
                 c2 = corr.candidates[1]
                 exec_bits.append(
                     f"接近候选包括 <code>{_esc(c2.dual_correlation_id)}</code> "
-                    f"（App {_esc(c2.app_stream)} / DB {_esc(c2.db_stream)}, "
-                    f"identity={c2.identity_score:.1f}）。"
+                    f"（应用侧 Stream {_esc(c2.app_stream)} / 数据库侧 Stream {_esc(c2.db_stream)}，"
+                    f"身份得分（Identity Score）={c2.identity_score:.1f}）。"
                 )
     elif corr:
         exec_bits.append(
@@ -182,40 +183,43 @@ def export_case_html(result: CaseAnalysisResult, path: str) -> str:
         )
     if ping_corr:
         exec_bits.append(
-            f"Ping（SUPPORTING）：{_esc(ping_corr.summary)}"
+            f"Ping 辅助证据（SUPPORTING）：{_esc(ping_corr.summary)}"
         )
     elif not ping.provided:
-        exec_bits.append("Ping Evidence: <strong>NOT PROVIDED</strong>.")
+        exec_bits.append("Ping 辅助证据：<strong>NOT PROVIDED</strong>（未提供）。")
 
+    icmp_note = (
+        "<p class=\"callout callout-info\"><strong>"
+        "ICMP/Ping 仅作为辅助证据，不能单独证明 TCP 健康状态，也不能单独确定故障根因。"
+        "</strong></p>"
+    )
     ping_block = (
-        "<p>Ping Evidence: <strong>NOT PROVIDED</strong></p>"
-        "<p class=\"callout callout-info\"><strong>ICMP evidence is supporting evidence only. "
-        "It does not prove TCP health or root cause.</strong></p>"
+        "<p>Ping 辅助证据：<strong>NOT PROVIDED</strong>（未提供）</p>"
+        + icmp_note
     )
     if ping.provided and ping_corr:
         ping_block = f"""
         <ul>
-          <li>Target: <code>{_esc(ping_corr.target_host)}</code></li>
-          <li>Window: ±{_esc(ping_corr.window_seconds)}s</li>
-          <li>Samples={_esc(ping_corr.samples)} Replies={_esc(ping_corr.replies)}
-              Timeouts={_esc(ping_corr.timeouts)} Unreachable={_esc(ping_corr.unreachable)}</li>
-          <li>Summary: {_esc(ping_corr.summary)}</li>
-          <li>Caution: {_esc(ping_corr.caution)}</li>
+          <li>目标：<code>{_esc(ping_corr.target_host)}</code></li>
+          <li>时间窗口：±{_esc(ping_corr.window_seconds)}s</li>
+          <li>样本数={_esc(ping_corr.samples)} 应答数={_esc(ping_corr.replies)}
+              超时数={_esc(ping_corr.timeouts)} 不可达={_esc(ping_corr.unreachable)}</li>
+          <li>摘要：{_esc(ping_corr.summary)}</li>
+          <li>说明：{_esc(ping_corr.caution)}</li>
         </ul>
-        <p class="callout callout-info"><strong>ICMP evidence is supporting evidence only.
-        It does not prove TCP health or root cause.</strong></p>
+        {icmp_note}
         """
 
     filter_block = ""
     if corr:
         filter_block = (
-            f"<p>Total TCP flows considered: <strong>{_esc(corr.flows_considered)}</strong>; "
-            f"Filtered by endpoint: {_esc(corr.filtered_endpoint)}; "
-            f"Filtered by time/lifetime: {_esc(corr.filtered_time)}; "
-            f"Eligible candidates: <strong>{_esc(corr.eligible_count)}</strong> "
-            f"(grace={_esc(corr.lifetime_grace_seconds)}s).</p>"
-            "<p class='muted'>Candidate ranking is primarily identity-based. "
-            "TCP anomaly severity is not treated as connection identity.</p>"
+            f"<p>纳入考虑的 TCP Flow：<strong>{_esc(corr.flows_considered)}</strong>；"
+            f"按端点过滤：{_esc(corr.filtered_endpoint)}；"
+            f"按时间/生命周期过滤：{_esc(corr.filtered_time)}；"
+            f"有效候选数：<strong>{_esc(corr.eligible_count)}</strong> "
+            f"（宽限时间 grace={_esc(corr.lifetime_grace_seconds)}s）。</p>"
+            "<p class='muted'>候选连接排名主要依据连接身份匹配；"
+            "TCP 异常严重程度不作为连接身份判定依据。</p>"
         )
 
     css = """
@@ -276,29 +280,29 @@ function copyText(id){
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>DBCAP Case Report — {_esc(result.case_id)}</title>
+<title>DBCAP 数据库连接故障分析报告 — {_esc(result.case_id)}</title>
 <style>{css}</style>
 </head>
 <body>
 <header>
-  <h1>DBCAP Case Report</h1>
-  <div class="meta">Case <strong>{_esc(result.case_id)}</strong> · Offline self-contained report</div>
+  <h1>DBCAP 数据库连接故障分析报告</h1>
+  <div class="meta">案例 <strong>{_esc(result.case_id)}</strong> · 离线自包含分析报告</div>
 </header>
 <main>
 <section>
   <div class="status-grid">
-    <div class="status-card"><div class="label">Case</div><div class="value">{_esc(result.case_id)}</div></div>
-    <div class="status-card"><div class="label">JDBC Events</div><div class="value">{len(jdbc.events)}</div></div>
-    <div class="status-card"><div class="label">Primary Error</div><div class="value">{_esc(primary_type)}<br/><span class="muted">{_esc(primary_ts)}</span></div></div>
-    <div class="status-card"><div class="label">Correlation</div><div class="value">{_badge(corr_status, corr_status.lower())}</div></div>
-    <div class="status-card"><div class="label">App Capture</div><div class="value">{_esc(app_q.get('credibility'))}<br/><span class="muted">cut_short={_esc(app_q.get('file_cut_short'))}</span></div></div>
-    <div class="status-card"><div class="label">DB Capture</div><div class="value">{_esc(db_q.get('credibility'))}</div></div>
-    <div class="status-card"><div class="label">Ping</div><div class="value">{'PROVIDED' if ping.provided else 'NOT PROVIDED'}</div></div>
+    <div class="status-card"><div class="label">案例</div><div class="value">{_esc(result.case_id)}</div></div>
+    <div class="status-card"><div class="label">JDBC 异常事件</div><div class="value">{len(jdbc.events)}</div></div>
+    <div class="status-card"><div class="label">主要异常</div><div class="value">{_esc(primary_type)}<br/><span class="muted">{_esc(primary_ts)}</span></div></div>
+    <div class="status-card"><div class="label">关联状态</div><div class="value">{_badge(corr_status, corr_status.lower())}</div></div>
+    <div class="status-card"><div class="label">应用侧抓包</div><div class="value">{_esc(app_q.get('credibility'))}<br/><span class="muted">file_cut_short={_esc(app_q.get('file_cut_short'))}</span></div></div>
+    <div class="status-card"><div class="label">数据库侧抓包</div><div class="value">{_esc(db_q.get('credibility'))}</div></div>
+    <div class="status-card"><div class="label">Ping 辅助证据</div><div class="value">{'PROVIDED（已提供）' if ping.provided else 'NOT PROVIDED（未提供）'}</div></div>
   </div>
 </section>
 
 <section id="exec">
-  <h2>1. Executive Summary</h2>
+  <h2>1. 执行摘要</h2>
   {ambiguous_banner}
   {''.join(f'<p>{b}</p>' for b in exec_bits)}
   <p class="muted">因此：可确认 JDBC 异常文本与时间、以及双端 PCAP 中的候选连接证据；
@@ -306,63 +310,62 @@ function copyText(id){
 </section>
 
 <section>
-  <h2>2. Input Files</h2>
+  <h2>2. 输入文件</h2>
   <ul>
-    <li>JDBC log: <code>{_esc(jdbc.jdbc_log)}</code></li>
-    <li>App PCAP: <code>{_esc(jdbc.app_pcap)}</code></li>
-    <li>DB PCAP: <code>{_esc(jdbc.db_pcap)}</code></li>
-    <li>Ping log: <code>{_esc(ping.ping_log if ping.provided else 'NOT PROVIDED')}</code></li>
-    <li>Server: <code>{_esc(jdbc.server_ip)}</code> port <code>{_esc(jdbc.db_port)}</code></li>
+    <li>JDBC 日志：<code>{_esc(jdbc.jdbc_log)}</code></li>
+    <li>应用侧 PCAP：<code>{_esc(jdbc.app_pcap)}</code></li>
+    <li>数据库侧 PCAP：<code>{_esc(jdbc.db_pcap)}</code></li>
+    <li>Ping 日志：<code>{_esc(ping.ping_log if ping.provided else 'NOT PROVIDED（未提供）')}</code></li>
+    <li>数据库服务器：<code>{_esc(jdbc.server_ip)}</code> 端口 <code>{_esc(jdbc.db_port)}</code></li>
   </ul>
 </section>
 
 <section>
-  <h2>3. JDBC Events</h2>
+  <h2>3. JDBC 异常事件</h2>
   <table>
     <thead><tr>
-      <th>Event ID</th><th>Timestamp</th><th>Type</th><th>Occurrences</th>
-      <th>Correlation</th><th>Top Candidate</th><th>Eligible</th>
+      <th>事件编号</th><th>时间</th><th>异常类型</th><th>发生次数</th>
+      <th>关联状态</th><th>首选候选连接</th><th>有效候选数</th>
     </tr></thead>
     <tbody>
-    {''.join(ev_rows) or '<tr><td colspan="7">(none)</td></tr>'}
+    {''.join(ev_rows) or '<tr><td colspan="7">（无）</td></tr>'}
     </tbody>
   </table>
 </section>
 
 <section>
-  <h2>4. TCP Candidate Summary</h2>
+  <h2>4. TCP 候选连接</h2>
   {filter_block}
   <table>
     <thead><tr>
-      <th>Rank</th><th>Correlation ID</th><th>App Stream</th><th>DB Stream</th>
-      <th>Identity Score</th><th>Health Score</th><th>Total</th><th>Status</th><th>Reason</th>
+      <th>排名</th><th>关联编号</th><th>应用侧 Stream</th><th>数据库侧 Stream</th>
+      <th>身份得分（Identity Score）</th><th>健康得分（Health Score）</th><th>总分</th><th>状态</th><th>判断依据</th>
     </tr></thead>
     <tbody>
-    {''.join(cand_rows) or '<tr><td colspan="9">(none)</td></tr>'}
+    {''.join(cand_rows) or '<tr><td colspan="9">（无）</td></tr>'}
     </tbody>
   </table>
 </section>
 
 <section>
-  <h2>5. Dual-PCAP Evidence</h2>
+  <h2>5. 双端 PCAP 证据</h2>
   <ul>
-    <li>Dual correlated flows: {_esc(len(dual.correlated_flows))}</li>
-    <li>Clock: <code>{_esc(dual.clock.status)}</code> — {_esc(dual.clock.note)}</li>
-    <li>Key MATCHED_SEGMENT rows appear in Unified Timeline with correlation_id.</li>
+    <li>双端已关联 Flow：{_esc(len(dual.correlated_flows))}</li>
+    <li>时钟对齐：<code>{_esc(dual.clock.status)}</code> — {_esc(dual.clock.note)}</li>
+    <li>关键 MATCHED_SEGMENT 行出现在统一故障时间线中，并保留 correlation_id。</li>
   </ul>
 </section>
 
 <section>
-  <h2>6. Unified Timeline</h2>
-  <p class="muted">Important events only. Relative seconds are vs primary JDBC event
-  (− before / + after). Each Dual/TCP row keeps candidate correlation_id.</p>
+  <h2>6. 统一故障时间线</h2>
+  <p class="muted">仅显示关键事件。相对时间以主 JDBC 异常为基准（− 表示之前 / + 表示之后）。每条 Dual/TCP 记录保留候选 correlation_id。</p>
   {tl_note}
   <div style="overflow-x:auto">
   <table>
     <thead><tr>
-      <th>Time</th><th>Rel(s)</th><th>Source</th><th>Type</th><th>Corr ID</th>
-      <th>Dir</th><th>App</th><th>DB</th><th>Frame</th><th>Seq</th><th>Len</th>
-      <th>Description</th><th>Class</th>
+      <th>时间</th><th>相对 JDBC 时间（秒）</th><th>证据来源</th><th>类型</th><th>关联编号</th>
+      <th>方向</th><th>应用侧 Stream</th><th>数据库侧 Stream</th><th>帧号</th><th>SEQ</th><th>LEN</th>
+      <th>描述</th><th>证据分类</th>
     </tr></thead>
     <tbody>{''.join(tl_rows)}</tbody>
   </table>
@@ -370,52 +373,52 @@ function copyText(id){
 </section>
 
 <section>
-  <h2>7. Ping Evidence</h2>
+  <h2>7. Ping 辅助证据</h2>
   {ping_block}
 </section>
 
 <section>
-  <h2>8. Confirmed Facts</h2>
+  <h2>8. 已确认事实</h2>
   <ul>{_elist(result.confirmed)}</ul>
 </section>
 <section>
-  <h2>9. Correlated Evidence</h2>
+  <h2>9. 关联证据</h2>
   <ul>{_elist(result.correlated)}</ul>
 </section>
 <section>
-  <h2>10. Supporting Evidence</h2>
+  <h2>10. 辅助证据</h2>
   <ul>{_elist(result.supporting)}</ul>
 </section>
 <section>
-  <h2>11. Unknown / Cannot Determine</h2>
+  <h2>11. 未知 / 无法确定</h2>
   <ul>{_elist(result.unknown)}</ul>
 </section>
 
 <section>
-  <h2>12. Capture Quality</h2>
+  <h2>12. 抓包质量</h2>
   <ul>
-    <li>App-side: credibility=<strong>{_esc(app_q.get('credibility'))}</strong>
+    <li>应用侧：credibility=<strong>{_esc(app_q.get('credibility'))}</strong>
         file_cut_short=<strong>{_esc(app_q.get('file_cut_short'))}</strong>
         truncated={_esc(app_q.get('truncated_packets'))}</li>
-    <li>DB-side: credibility=<strong>{_esc(db_q.get('credibility'))}</strong>
+    <li>数据库侧：credibility=<strong>{_esc(db_q.get('credibility'))}</strong>
         file_cut_short=<strong>{_esc(db_q.get('file_cut_short'))}</strong>
         truncated={_esc(db_q.get('truncated_packets'))}</li>
   </ul>
 </section>
 
 <section>
-  <h2>13. Wireshark Verification</h2>
-  <ul id="ws-filters">{''.join(ws_bits) or '<li>(none)</li>'}</ul>
-  <p><button type="button" onclick="copyText('ws-filters')">Copy filters</button></p>
+  <h2>13. Wireshark 人工复核</h2>
+  <ul id="ws-filters">{''.join(ws_bits) or '<li>（无）</li>'}</ul>
+  <p><button type="button" onclick="copyText('ws-filters')">复制过滤条件</button></p>
 </section>
 
 <section>
-  <h2>14. Known Limitations</h2>
+  <h2>14. 已知限制</h2>
   <ul>
     {''.join(f'<li>{_esc(x)}</li>' for x in (jdbc.limitations or [
-      'Presentation layer only — no re-analysis in HTML.',
-      'Without JDBC client source port, identity cannot be CONFIRMED.',
-      'Ping is supporting evidence only.',
+      '本页仅为展示层，不会在 HTML 中重新分析。',
+      '若 JDBC 日志没有客户端源端口，连接身份不能判定为 CONFIRMED。',
+      'Ping 仅作为辅助证据。',
     ]))}
   </ul>
 </section>

@@ -182,16 +182,17 @@ def test_v27_html_generated_self_contained():
     path = export_case_html(_minimal_result(), str(d / "report.html"))
     text = Path(path).read_text(encoding="utf-8")
     assert Path(path).exists()
-    assert "DBCAP Case Report" in text
-    assert "Executive Summary" in text
-    assert "JDBC Events" in text
-    assert "Identity Score" in text
+    assert "DBCAP 数据库连接故障分析报告" in text
+    assert "执行摘要" in text
+    assert "JDBC 异常事件" in text
+    assert "身份得分（Identity Score）" in text
     assert "AMBIGUOUS" in text
     assert "不足以唯一确定" in text
     assert "CF0001" in text
     assert "tcp.stream eq 26" in text
     assert "DEGRADED" in text
-    assert "supporting evidence only" in text.lower() or "SUPPORTING" in text
+    assert "ICMP/Ping 仅作为辅助证据" in text
+    assert "SUPPORTING" in text or "辅助证据" in text
     assert "http://" not in text.lower()
     assert "https://" not in text.lower()
     assert "cdn." not in text.lower()
